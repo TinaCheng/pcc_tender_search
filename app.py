@@ -36,7 +36,7 @@ def require_auth():
             return authenticate()
 
 # ========= 可調整參數 =========
-REQUEST_TIMEOUT = 25
+REQUEST_TIMEOUT = 60
 DEFAULT_MAX_RESULTS = 20
 EXPORT_FILENAME = "政府標案查詢結果_V4.xlsx"
 
@@ -407,9 +407,6 @@ def request_json(url, params=None):
 
 
 def search_api(query):
-    """
-    用 searchbytitle 直接回 records + detail。
-    """
     used_endpoint = ""
     records = []
     last_errors = []
@@ -425,13 +422,13 @@ def search_api(query):
 
             data = request_json(endpoint, params=params)
 
-            print("API endpoint =", endpoint)
-            print("API query =", query)
-            print("API response type =", type(data).__name__)
+            print("API endpoint =", endpoint, flush=True)
+            print("API query =", query, flush=True)
+            print("API response type =", type(data).__name__, flush=True)
 
             if isinstance(data, dict):
                 recs = data.get("records", [])
-                print("API records count =", len(recs) if isinstance(recs, list) else "not-list")
+                print("API records count =", len(recs) if isinstance(recs, list) else "not-list", flush=True)
 
                 if isinstance(recs, list):
                     used_endpoint = endpoint
@@ -442,7 +439,7 @@ def search_api(query):
 
         except Exception as e:
             err = f"{endpoint}：{type(e).__name__}：{str(e)}"
-            print("API ERROR =", err)
+            print("API ERROR =", err, flush=True)
             last_errors.append(err)
 
     if last_errors:
@@ -681,6 +678,20 @@ def index():
         max_results=max_results,
     )
 
+@app.route("/debug-api")
+def debug_api():
+    lines = []
+    for endpoint in SEARCH_API_ENDPOINTS:
+        try:
+            data = request_json(endpoint, params={"query": "無人機", "page": 1})
+            if isinstance(data, dict):
+                recs = data.get("records", [])
+                lines.append(f"{endpoint} -> OK, records={len(recs) if isinstance(recs, list) else 'not-list'}")
+            else:
+                lines.append(f"{endpoint} -> type={type(data).__name__}")
+        except Exception as e:
+            lines.append(f"{endpoint} -> ERROR: {type(e).__name__}: {e}")
+    return "<br>".join(lines)
 
 @app.route("/PSD_PCCtool/export")
 def export_excel():
