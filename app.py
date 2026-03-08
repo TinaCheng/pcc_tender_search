@@ -409,10 +409,10 @@ def request_json(url, params=None):
 def search_api(query):
     """
     用 searchbytitle 直接回 records + detail。
-    依你貼的 PHP 設計，columns[] 可以直接把 detail 欄位補回來。
     """
     used_endpoint = ""
     records = []
+    last_errors = []
 
     for endpoint in SEARCH_API_ENDPOINTS:
         try:
@@ -425,14 +425,28 @@ def search_api(query):
 
             data = request_json(endpoint, params=params)
 
+            print("API endpoint =", endpoint)
+            print("API query =", query)
+            print("API response type =", type(data).__name__)
+
             if isinstance(data, dict):
                 recs = data.get("records", [])
+                print("API records count =", len(recs) if isinstance(recs, list) else "not-list")
+
                 if isinstance(recs, list):
                     used_endpoint = endpoint
                     records = recs[:MAX_API_CANDIDATES]
-                    break
-        except Exception:
-            continue
+                    return records, used_endpoint
+
+            last_errors.append(f"{endpoint}：回傳格式不是預期 dict/records")
+
+        except Exception as e:
+            err = f"{endpoint}：{type(e).__name__}：{str(e)}"
+            print("API ERROR =", err)
+            last_errors.append(err)
+
+    if last_errors:
+        raise Exception("；".join(last_errors))
 
     return records, used_endpoint
 
@@ -534,7 +548,9 @@ def collect_rows_for_query(raw_query, max_results):
     merged = {}
 
     for q in variants:
-        records, endpoint = search_api(q)
+    print("TRY QUERY =", q)
+    records, endpoint = search_api(q)
+    
         if endpoint and not used_api:
             used_api = endpoint
 
