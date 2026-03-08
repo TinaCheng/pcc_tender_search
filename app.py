@@ -28,7 +28,7 @@ def authenticate():
 
 @app.before_request
 def require_auth():
-    protected_paths = ["/", "/export"]
+    protected_paths = ["/PSD_PCCtool", "/PSD_PCCtool/export"]
 
     if request.path in protected_paths:
         auth = request.authorization
