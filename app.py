@@ -43,9 +43,6 @@ EXPORT_FILENAME = "政府標案查詢結果_V4.xlsx"
 MAX_VARIANTS = 5
 MAX_API_CANDIDATES = 30
 
-print("DEBUG query:", raw_query)
-print("DEBUG variants:", variants)
-
 # 先用目前可見的 openfun API；若未來端點改動，再補 fallback
 SEARCH_API_ENDPOINTS = [
     "https://pcc-api.openfun.app/api/searchbytitle",
@@ -551,8 +548,8 @@ def collect_rows_for_query(raw_query, max_results):
     merged = {}
 
     for q in variants:
-    print("TRY QUERY =", q)
-    records, endpoint = search_api(q)
+        print("TRY QUERY =", q)
+        records, endpoint = search_api(q)
     
         if endpoint and not used_api:
             used_api = endpoint
